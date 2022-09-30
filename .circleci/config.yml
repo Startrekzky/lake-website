@@ -5,7 +5,7 @@ version: 2.1
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  say-hello:
+  build:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
@@ -15,12 +15,54 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: "build"
+          command: |
+            create_time=`date '+%Y-%m-%dT%H:%M:%S%z'`
+            curl https://ui-my-svr02.demo.devlake.io/api/plugins/webhook/1/cicd_tasks -X 'POST' -d "{\"pipeline_name\":\"`date '+%Y-%m-%d'`$CIRCLE_SHA1\",\"name\":\"$CIRCLE_WORKFLOW_JOB_ID\",\"result\":\"IN_PROGRESS\",\"status\":\"IN_PROGRESS\",\"type\":\"BUILD\",\"environment\":\"PRODUCTION\",\"created_date\":\"$create_time\",\"repo_id\":\"$CIRCLE_REPOSITORY_URL\",\"branch\":\"$CIRCLE_BRANCH\",\"commit_sha\":\"$CIRCLE_SHA1\"}" -H 'Authorization: Basic ZGV2bGFrZTpqbDhzazFvc3NPNk93'
+            echo Hello, World!
+            sleep $[ ( $RANDOM % 10 )  + 1 ]
+            curl https://ui-my-svr02.demo.devlake.io/api/plugins/webhook/1/cicd_tasks -X 'POST' -d "{\"pipeline_name\":\"`date '+%Y-%m-%d'`$CIRCLE_SHA1\",\"name\":\"$CIRCLE_WORKFLOW_JOB_ID\",\"result\":\"SUCCESS\",\"status\":\"DONE\",\"type\":\"BUILD\",\"environment\":\"PRODUCTION\",\"created_date\":\"$create_time\",\"finished_date\":\"`date '+%Y-%m-%dT%H:%M:%S%z'`\",\"repo_id\":\"$CIRCLE_REPOSITORY_URL\"}" -H 'Authorization: Basic ZGV2bGFrZTpqbDhzazFvc3NPNk93'
+          # when: 
+      - run:
+          name: "send fail"
+          command: |
+            curl https://ui-my-svr02.demo.devlake.io/api/plugins/webhook/1/cicd_tasks -X 'POST' -d "{\"pipeline_name\":\"`date '+%Y-%m-%d'`$CIRCLE_SHA1\",\"name\":\"$CIRCLE_WORKFLOW_JOB_ID\",\"result\":\"FAILURE\",\"status\":\"DONE\",\"type\":\"BUILD\",\"environment\":\"PRODUCTION\",\"created_date\":\"$create_time\",\"finished_date\":\"`date '+%Y-%m-%dT%H:%M:%S%z'`\",\"repo_id\":\"$CIRCLE_REPOSITORY_URL\"}" -H 'Authorization: Basic ZGV2bGFrZTpqbDhzazFvc3NPNk93'
+          when: on_fail
 
+  deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: "deploy"
+          command: |
+            env
+            create_time=`date '+%Y-%m-%dT%H:%M:%S%z'`
+            echo "{\"pipeline_name\":\"`date '+%Y-%m-%d'`$CIRCLE_SHA1\",\"name\":\"$CIRCLE_WORKFLOW_JOB_ID\",\"result\":\"IN_PROGRESS\",\"status\":\"IN_PROGRESS\",\"type\":\"DEPLOYMENT\",\"environment\":\"PRODUCTION\",\"created_date\":\"$create_time\",\"repo_id\":\"$CIRCLE_REPOSITORY_URL\",\"branch\":\"$CIRCLE_BRANCH\",\"commit_sha\":\"$CIRCLE_SHA1\"}"
+            curl https://ui-my-svr02.demo.devlake.io/api/plugins/webhook/1/cicd_tasks -X 'POST' -d "{\"pipeline_name\":\"`date '+%Y-%m-%d'`$CIRCLE_SHA1\",\"name\":\"$CIRCLE_WORKFLOW_JOB_ID\",\"result\":\"IN_PROGRESS\",\"status\":\"IN_PROGRESS\",\"type\":\"DEPLOYMENT\",\"environment\":\"PRODUCTION\",\"created_date\":\"$create_time\",\"repo_id\":\"$CIRCLE_REPOSITORY_URL\",\"branch\":\"$CIRCLE_BRANCH\",\"commit_sha\":\"$CIRCLE_SHA1\"}" -H 'Authorization: Basic ZGV2bGFrZTpqbDhzazFvc3NPNk93'
+            echo Hello, World!
+            sleep $[ ( $RANDOM % 10 )  + 10 ]
+            echo "{\"pipeline_name\":\"`date '+%Y-%m-%d'`$CIRCLE_SHA1\",\"name\":\"$CIRCLE_WORKFLOW_JOB_ID\",\"result\":\"SUCCESS\",\"status\":\"DONE\",\"type\":\"DEPLOYMENT\",\"environment\":\"PRODUCTION\",\"created_date\":\"$create_time\",\"finished_date\":\"`date '+%Y-%m-%dT%H:%M:%S%z'`\",\"repo_id\":\"$CIRCLE_REPOSITORY_URL\"}"
+            curl https://ui-my-svr02.demo.devlake.io/api/plugins/webhook/1/cicd_tasks -X 'POST' -d "{\"pipeline_name\":\"`date '+%Y-%m-%d'`$CIRCLE_SHA1\",\"name\":\"$CIRCLE_WORKFLOW_JOB_ID\",\"result\":\"SUCCESS\",\"status\":\"DONE\",\"type\":\"DEPLOYMENT\",\"environment\":\"PRODUCTION\",\"created_date\":\"$create_time\",\"finished_date\":\"`date '+%Y-%m-%dT%H:%M:%S%z'`\",\"repo_id\":\"$CIRCLE_REPOSITORY_URL\"}" -H 'Authorization: Basic ZGV2bGFrZTpqbDhzazFvc3NPNk93'
+          # when: 
+      - run:
+          name: "send fail"
+          command: |
+            curl https://ui-my-svr02.demo.devlake.io/api/plugins/webhook/1/cicd_tasks -X 'POST' -d "{\"pipeline_name\":\"`date '+%Y-%m-%d'`$CIRCLE_SHA1\",\"name\":\"$CIRCLE_WORKFLOW_JOB_ID\",\"result\":\"FAILURE\",\"status\":\"DONE\",\"type\":\"DEPLOYMENT\",\"environment\":\"PRODUCTION\",\"created_date\":\"$create_time\",\"finished_date\":\"`date '+%Y-%m-%dT%H:%M:%S%z'`\",\"repo_id\":\"$CIRCLE_REPOSITORY_URL\"}" -H 'Authorization: Basic ZGV2bGFrZTpqbDhzazFvc3NPNk93'
+          when: on_fail 
+      - run:
+          name: "close pipeline"
+          command: |
+            env
+            curl https://ui-my-svr02.demo.devlake.io/api/plugins/webhook/1/cicd_pipeline/`date '+%Y-%m-%d'`$CIRCLE_SHA1/finish -X 'POST' -d '' -H 'Authorization: Basic ZGV2bGFrZTpqbDhzazFvc3NPNk93'
+          when: always
+
+# 6
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   say-hello-workflow:
     jobs:
-      - say-hello
+      - build
+      - deploy
