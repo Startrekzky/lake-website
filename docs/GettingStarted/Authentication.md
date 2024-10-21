@@ -4,7 +4,7 @@ sidebar_position: 8
 description: How to secure your deployment and enable the Authentication
 ---
 
-The document explains how you can set up Apache DevLake securely. 
+The document explains how to set up Apache DevLake securely. 
 
 First of all, there are 4 services included in the deployment:
 
