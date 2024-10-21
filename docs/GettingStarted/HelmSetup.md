@@ -13,7 +13,7 @@ sidebar_position: 2
 
 ## Quick Start
 
-#### You can also check https://github.com/apache/incubator-devlake-helm-chart to make contribution
+#### You can also check: https://github.com/apache/incubator-devlake-helm-chart to make contribution
 
 ### Install
 
