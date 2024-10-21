@@ -13,14 +13,14 @@ description: >
 
 The following terms are arranged in the order of their appearance in the actual user workflow.
 
-### Projects
+### Project
 **A project is a method to group data**. Apache DevLake supports users to view metrics based on projects. A `project` is associated with multiple sets of [Data Scope](#data-scope), such as GitHub/GitLab repositories, Jira boards, Jenkins pipelines, etc. Metrics for a project are calculated based on the data entities(#data-entities) under the project's data scope. 
 
 A project has one [Blueprint](#Bluepirnts) for data collection and metric computation.
 
 For example, when a user associates 'Jenkins Job A' and  'Jira board B' with project 1, then ONLY `deployments` in 'Jenkins Job A' and `incidents` in 'Jira board B' will be used to calculate **Change Failure Rate** for project 1.
 
-### Blueprints
+### Blueprint
 **A blueprint is the plan that covers all the work to get your raw data ready for query and metric computation in the dashboards.** Creating a blueprint consists of four steps:
 1. **Adding [Data Connections](#data-connections)**: For each [data source](#data-sources), one or more data connections can be added to a single blueprint, depending on the data you want to sync to DevLake.
 2. **Setting the [Data Scope](#data-scope)**: For each data connection, you need to configure the scope of data, such as GitHub projects, Jira boards, and their corresponding [data entities](#data-entities).
@@ -35,7 +35,7 @@ The relationship among Blueprint, Data Connections, Data Scope and Transformatio
 - Each set of data scope only consists of one GitHub/GitLab project or Jira board, along with their corresponding data entities.
 - Each set of data scope can only have one set of transformation rules.
 
-### Data Sources
+### Data Source
 **A data source is a specific DevOps tool from which you wish to sync your data, such as GitHub, GitLab, Jira and Jenkins.**
 
 DevLake normally uses one [data plugin](#data-plugins) to pull data for a single data source. However, in some cases, DevLake uses multiple data plugins for one data source for the purpose of improved sync speed, among many other advantages. For instance, when you pull data from GitHub or GitLab, aside from the GitHub or GitLab plugin, Git Extractor is also used to pull data from the repositories. In this case, DevLake still refers GitHub or GitLab as a single data source.
